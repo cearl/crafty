@@ -83,31 +83,38 @@ def search():
     for item  in version_results:
         if "<dt>Downloads</dt>" in item:
             item = ""
+        if "span" in item:
+            item = ""
         if "Download" in item:
             item = item.replace('href="', '')
             item = item.replace('">Download</a>', '')
             projectHome[1] = "http://dev.bukkit.org"+item
             print("Found Version @ "+ projectHome[1])
     # Find file
-    buf = cStringIO.StringIO()
-    c = pycurl.Curl()
-    c.setopt(pycurl.USERAGENT, "Mozilla")
-    c.setopt(c.URL, projectHome[1])
-    c.setopt(c.WRITEFUNCTION, buf.write)
-    c.perform()
-    buffer = buf.getvalue()
-    buffer = re.sub('<[^<]> ', " ", buffer)
-    version_results = buffer.split()
-    for item in version_results:
-        if "Download" not in item:
-            item = "" 
-        elif "<dt>" in item:
-            item = ""
-        else:  
-            item = item.replace('href="', '')
-            item = item.replace('">Download</a>', '')
-            item = item.replace('</span></li>', '')
-            projectHome[2] = item
+    try:
+        buf = cStringIO.StringIO()
+        c = pycurl.Curl()
+        c.setopt(pycurl.USERAGENT, "Mozilla")
+        c.setopt(c.URL, projectHome[1])
+        c.setopt(c.WRITEFUNCTION, buf.write)
+        c.perform()
+        buffer = buf.getvalue()
+        buffer = re.sub('<[^<]> ', " ", buffer)
+        version_results = buffer.split()
+        for item in version_results:
+            if "Download" not in item:
+                item = "" 
+            elif "<dt>" in item:
+                item = ""
+            else:  
+                item = item.replace('href="', '')
+                item = item.replace('">Download</a>', '')
+                item = item.replace('</span></li>', '')
+                projectHome[2] = item
+    except:
+        print("Sorry,could not determine which file to download")
+        exit(1)
+
     print("Found file    @ "+projectHome[2])
     print("=========")
     print("-[Facts]-")
