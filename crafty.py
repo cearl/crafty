@@ -5,11 +5,31 @@ from string import maketrans
 import cStringIO
 import re
 import urllib
+import glob
+import os
 # Set Your MC directory
 minecraftHome = "/home/minecraft/"
 projectHome = []
 plugin_versions = []
 new_plugin = ""
+plugsList = []
+plugsName = []
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+
+    def disable(self):
+        self.HEADER = ''
+        self.OKBLUE = ''
+        self.OKGREEN = ''
+        self.WARNING = ''
+        self.FAIL = ''
+        self.ENDC = ''
+
 
 def usage():
     print("Install a plugin: Crafty 'plugin-name'")
@@ -21,11 +41,23 @@ def usage():
     print('Crafty "tim the enchanter"    Downloads and installs Tim the Enchanter plugin') 
 
 
-
 def getPlugs():
-    print ("Fetching Plugin")
-     
-
+    print ("Determining installed Plugins")
+    plugsList = glob.glob(minecraftHome+"plugins/*.jar") 
+    for item in plugsList:
+     #unzip -c GunsPlus.jar plugin.yml | grep name|  sed -e 's/name\://g'
+        #print("unzip -c " + item + " plugin.yml")
+        p = os.popen("unzip -c " + item + " plugin.yml | grep '^name:'","r")
+        while 1:
+            line = p.readline()
+            if not line: break
+            if "name:" in line:
+                line = re.sub('\n',"",line)
+                line = re.sub('\r',"",line)
+                line = re.sub("name:","",line)
+                line = re.sub(" ","",line)
+                plugsName.append(line) 
+    print plugsName
 def updatePlugs():
     print("Checking Plugins:")
     return(0)
@@ -39,18 +71,19 @@ def updateBukkit():
 
 
 
-def search():
+def search(plugin):
     # This is by no means perfect but it works surprisingly well!
 
-    print("-------------------------")
-    print("Looking up on Bukkit.org:")
-    print("-------------------------")
+    print("")
+    print(bcolors.OKGREEN + "Looking up on Bukkit.org:"+ bcolors.ENDC)
+    print("")
     # user input formatting
     buf = cStringIO.StringIO()
     intab = " "
     outtab = "+"
     trantab = maketrans(intab, outtab)
-    str = sys.argv[1] 
+    # str = sys.argv[1] 
+    str = plugin
     # Use google query to guess the project's bukkit uri
     c = pycurl.Curl()
     c.setopt(pycurl.USERAGENT, "Mozilla") 
@@ -89,7 +122,7 @@ def search():
             item = item.replace('href="', '')
             item = item.replace('">Download</a>', '')
             projectHome[1] = "http://dev.bukkit.org"+item
-            print("Found Version @ "+ projectHome[1])
+    print("Found Version @ "+ projectHome[1])
     # Find file
     try:
         buf = cStringIO.StringIO()
@@ -116,9 +149,9 @@ def search():
         exit(1)
 
     print("Found file    @ "+projectHome[2])
-    print("=========")
-    print("-[Facts]-")
-    print("=========")
+    print(bcolors.WARNING + "")
+    print("-[Project Facts]-")
+    print("" + bcolors.ENDC)
     # Get project facts
     buf = cStringIO.StringIO()
     c = pycurl.Curl()
@@ -135,11 +168,11 @@ def search():
                 formatter = item.split('"')
                 facts_storage.append(formatter[3])
      
-    print('[Date Created] '+facts_storage[0]) 
-    print('[Last Updated] '+facts_storage[1]) 
+    print(bcolors.OKBLUE +'[Date Created] '+ bcolors.ENDC  +facts_storage[0]) 
+    print(bcolors.OKBLUE +'[Last Updated] '+ bcolors.ENDC +facts_storage[1]) 
           
     buf.close()
-    getPlugs()
+    return(0)
     
 
 
@@ -148,6 +181,6 @@ def search():
 
 if __name__ == '__main__':
     
-   search()
+   getPlugs()
 
     
