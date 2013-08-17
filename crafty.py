@@ -75,7 +75,7 @@ def search(plugin):
     # This is by no means perfect but it works surprisingly well!
 
     print("")
-    print(bcolors.OKGREEN + "Looking up on Bukkit.org:"+ bcolors.ENDC)
+    print(bcolors.OKGREEN + "Looking up on Bing:"+ bcolors.ENDC)
     print("")
     # user input formatting
     buf = cStringIO.StringIO()
@@ -84,10 +84,10 @@ def search(plugin):
     trantab = maketrans(intab, outtab)
     # str = sys.argv[1] 
     str = plugin
-    # Use google query to guess the project's bukkit uri
+    # Use Bing query to guess the project's bukkit uri
     c = pycurl.Curl()
     c.setopt(pycurl.USERAGENT, "Mozilla") 
-    c.setopt(c.URL, "http://www.google.com/search?q=site:dev.bukkit.org+"+str.translate(trantab))
+    c.setopt(c.URL, "http://www.bing.com/search?q=site:dev.bukkit.org+"+str.translate(trantab)+"&&format=rss")
     c.setopt(c.WRITEFUNCTION, buf.write)
     c.perform()
     buffer =  buf.getvalue()
@@ -98,9 +98,10 @@ def search(plugin):
     buf.close()
     for item in search_results:
         if "url?q=http://dev.bukkit.org/bukkit-plugins/" and "files/" in item:
-            item = item.replace('href="/url?q=', '')
+            item = item.replace('Bukkit</title><link>', '')
             item = item.replace('files/', '')
             projectHome.append(item)
+            
     print("Found project @ "+projectHome[0])
     # Find the latest version
     buf = cStringIO.StringIO()
@@ -120,7 +121,7 @@ def search(plugin):
             item = ""
         if "Download" in item:
             item = item.replace('href="', '')
-            item = item.replace('">Download</a>', '')
+            item = item.replace('">Download</a>', '') 
             projectHome[1] = "http://dev.bukkit.org"+item
     print("Found Version @ "+ projectHome[1])
     # Find file
@@ -136,19 +137,20 @@ def search(plugin):
         version_results = buffer.split()
         for item in version_results:
             if "Download" not in item:
-                item = "" 
+                item = ""
             elif "<dt>" in item:
                 item = ""
-            else:  
+            else:
+               
                 item = item.replace('href="', '')
                 item = item.replace('">Download</a>', '')
                 item = item.replace('</span></li>', '')
-                projectHome[2] = item
+                new_plugin = item
     except:
         print("Sorry,could not determine which file to download")
         exit(1)
 
-    print("Found file    @ "+projectHome[2])
+    print("Found file    @ "+new_plugin)
     print(bcolors.WARNING + "")
     print("-[Project Facts]-")
     print("" + bcolors.ENDC)
@@ -181,6 +183,6 @@ def search(plugin):
 
 if __name__ == '__main__':
     
-   getPlugs()
+   search(sys.argv[1])
 
     
