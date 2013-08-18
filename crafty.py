@@ -63,13 +63,15 @@ def getPlugs():
 
 def findPlugsHome(plugs):
     for item in plugs:
+        failedPlugs = []
         projectHome[:] = []
         plugin_versions[:] = []
         try:
             search(item)
         except:
-            print("Can not update "+item)
-        
+            print("Can not stat "+item)
+            failedPlugs.append(item)
+
 def updatePlugs():
         
     return(0)
@@ -202,5 +204,9 @@ def search(plugin):
 
 
 if __name__ == '__main__':
-   #search(sys.argv[1])
-   getPlugs() 
+    try:
+        if sys.argv[1] == "-s":
+            search(sys.argv[2])
+    except:
+        getPlugs()    
+   
