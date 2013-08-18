@@ -14,6 +14,8 @@ plugin_versions = []
 new_plugin = ""
 plugsList = []
 plugsName = []
+plugsHome = []
+plugSearch = []
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -58,6 +60,56 @@ def getPlugs():
                 line = re.sub(" ","",line)
                 plugsName.append(line) 
     print plugsName
+
+
+
+def pluginHome(plugName):
+    print("Attempting to find Project home locally:")
+    plugsList = glob.glob(minecraftHome+"plugins/*.jar")
+    for item in plugsList:
+        p = os.popen("unzip -c " + item + " plugin.yml| grep '^website:'","r")
+        while 1:
+            line = p.readline()
+            if not line: break
+            if "dev.bukkit.org" in line:
+                line = re.sub('\n',"",line)
+                line = re.sub('\r',"",line)
+                line = re.sub("website:","",line)
+                line = re.sub(" ","",line)
+                plugsHome.append(line)
+            else:
+                item = re.sub(minecraftHome+"plugins/", "",item)
+                item = re.sub(".jar","",item)
+                plugSearch.append(item)
+                print("Using search to locate "+item)
+
+    for item in plugSearch:
+        buf = cStringIO.StringIO()
+        # Use Bing query to guess the project's bukkit uri
+        c = pycurl.Curl()
+        c.setopt(pycurl.USERAGENT, "Mozilla")
+        c.setopt(c.URL, "http://www.bing.com/search?q=site:dev.bukkit.org+"+item+"&&format=rss")
+        c.setopt(c.WRITEFUNCTION, buf.write)
+        c.perform()
+        buffer =  buf.getvalue()
+        parsed_buffer = re.sub('<[^<]> ', " ", buffer)
+        parsed_buffer = re.sub('&'," ", parsed_buffer)
+        parsed_buffer = re.sub("\d+", " ", parsed_buffer)
+        parsed_buffer = re.sub("</link><description>Curse"," ",parsed_buffer)
+        parsed_buffer = re.sub("</link>"," ",parsed_buffer)
+        search_results = parsed_buffer.split()
+        buf.close()
+        for item in search_results:
+            
+            if "url?q=http://dev.bukkit.org/bukkit-plugins/" and "files/" in item:
+                item = item.replace('Bukkit</title><link>', '')
+                item = item.replace('files/', '')
+                plugsHome.append(item)
+    plugsHomeUniq = []
+    plugsHomeUniq = (set(plugsHome))
+    
+    print plugsHomeUniq
+
 def updatePlugs():
     print("Checking Plugins:")
     return(0)
@@ -94,6 +146,7 @@ def search(plugin):
     parsed_buffer = re.sub('<[^<]> ', " ", buffer)
     parsed_buffer = re.sub('&'," ", parsed_buffer)
     parsed_buffer = re.sub("\d+", " ", parsed_buffer)
+    parsed_buffer = re.sub("</link><description>Curse"," ",parsed_buffer)
     search_results = parsed_buffer.split()
     buf.close()
     for item in search_results:
@@ -101,9 +154,12 @@ def search(plugin):
             item = item.replace('Bukkit</title><link>', '')
             item = item.replace('files/', '')
             projectHome.append(item)
-            
-    print("Found project @ "+projectHome[0])
-    # Find the latest version
+    try:
+        print("Found project @ "+projectHome[0])
+    except:
+        print("Can not determine project home")
+        return
+     # Find the latest version
     buf = cStringIO.StringIO()
     c = pycurl.Curl()
     c.setopt(pycurl.USERAGENT, "Mozilla")
@@ -111,10 +167,12 @@ def search(plugin):
     c.setopt(c.WRITEFUNCTION, buf.write)
     c.perform()
     buffer = buf.getvalue()
-    buffer = re.sub('<[^<]> ', " ", buffer)
-    
+    buffer = re.sub('<[^<]> ', " ", buffer) 
     version_results = buffer.split()
     for item  in version_results:
+        if "files" not in item:
+            item = ""
+            
         if "<dt>Downloads</dt>" in item:
             item = ""
         if "span" in item:
@@ -122,8 +180,11 @@ def search(plugin):
         if "Download" in item:
             item = item.replace('href="', '')
             item = item.replace('">Download</a>', '') 
+            item = item.replace('</link><description>', '')
             projectHome[1] = "http://dev.bukkit.org"+item
+        
     print("Found Version @ "+ projectHome[1])
+        
     # Find file
     try:
         buf = cStringIO.StringIO()
@@ -140,12 +201,14 @@ def search(plugin):
                 item = ""
             elif "<dt>" in item:
                 item = ""
-            else:
-               
+            elif "jar" or "tar" or "zip" or "rar" or "tgz" or "gz" in item:
                 item = item.replace('href="', '')
                 item = item.replace('">Download</a>', '')
                 item = item.replace('</span></li>', '')
                 new_plugin = item
+            else:
+                print "Can not determine project files"
+                return
     except:
         print("Sorry,could not determine which file to download")
         exit(1)
@@ -182,7 +245,8 @@ def search(plugin):
 
 
 if __name__ == '__main__':
-    
-   search(sys.argv[1])
-
+   print sys.argv[0] 
+   #search(sys.argv[1])
+   plugName = "tim"
+   pluginHome(plugName)
     
