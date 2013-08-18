@@ -72,7 +72,7 @@ def findPlugsHome(plugs):
             print("Can not stat "+item)
             failedPlugs.append(item)
 
-def updatePlugs():
+def checkPlugsVersion():
         
     return(0)
 
