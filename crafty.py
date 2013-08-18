@@ -107,11 +107,14 @@ def pluginHome(plugName):
                 plugsHome.append(item)
     plugsHomeUniq = []
     plugsHomeUniq = (set(plugsHome))
+    updatePlugs(plugsHomeUniq)
     
-    print plugsHomeUniq
-
-def updatePlugs():
-    print("Checking Plugins:")
+     
+def updatePlugs(plugsHomeUniq):
+    for item in plugsHomeUniq:
+        item = re.sub('\(','',item)
+        item = re.sub('\)','',item)
+        print item
     return(0)
 
 
